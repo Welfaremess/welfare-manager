@@ -141,46 +141,63 @@ async function fetchSheetData() {
 }
 
 async function loadInstalments(status, allowAction) {
-  const data = await fetchSheetData();
-  const headers = data[0];
-  const rows = data.slice(1);
-  const container = document.getElementById(`tab-${status.toLowerCase()}`);
-  container.innerHTML = "";
-
-  const filtered = rows.filter(row => row[4] === status);
-  if (filtered.length === 0) {
-    container.innerHTML = "<div class='card'>No data found.</div>";
-    return;
-  }
-
-  filtered.forEach((row, index) => {
-    const [email, name, room, date, , amount] = row;
-    const card = document.createElement('div');
-    card.className = "card";
-    card.innerHTML = `
-      <strong>${name}</strong><br/>
-      Room: ${room}<br/>
-      Date: ${date}<br/>
-      Amount: ₹${amount}<br/>
-    `;
-
-    if (allowAction) {
-      const approveBtn = document.createElement("button");
-      approveBtn.className = "approve";
-      approveBtn.textContent = "Approve";
-      approveBtn.onclick = () => updateStatus(name, room, date, amount, "Approved");
-
-      const rejectBtn = document.createElement("button");
-      rejectBtn.className = "reject";
-      rejectBtn.textContent = "Reject";
-      rejectBtn.onclick = () => updateStatus(name, room, date, amount, "Rejected");
-
-      card.appendChild(approveBtn);
-      card.appendChild(rejectBtn);
+  try {
+    const data = await fetchSheetData();
+    if (!data || data.length === 0) {
+      throw new Error('No data found or sheet is empty.');
     }
 
-    container.appendChild(card);
-  });
+    const headers = data[0];  // First row is the header
+    const rows = data.slice(1);  // All subsequent rows are the data rows
+
+    if (!rows.length) {
+      document.getElementById(`tab-${status.toLowerCase()}`).innerHTML = "<div class='card'>No instalments available.</div>";
+      return;
+    }
+
+    // Filter rows by status (status is in the last column, index 7)
+    const filtered = rows.filter(row => row[7] === status); // row[7] is the 'Status' column
+
+    const container = document.getElementById(`tab-${status.toLowerCase()}`);
+    container.innerHTML = ""; // Clear previous content
+
+    if (filtered.length === 0) {
+      container.innerHTML = "<div class='card'>No instalments with this status.</div>";
+      return;
+    }
+
+    filtered.forEach(row => {
+      const [email, name, room, date, amount] = row; // Adjusted the number of elements based on the columns
+      const card = document.createElement('div');
+      card.className = "card";
+      card.innerHTML = `
+        <strong>${name}</strong><br/>
+        Room: ${room}<br/>
+        Date: ${date}<br/>
+        Amount: ₹${amount}<br/>
+      `;
+
+      if (allowAction) {
+        const approveBtn = document.createElement("button");
+        approveBtn.className = "approve";
+        approveBtn.textContent = "Approve";
+        approveBtn.onclick = () => updateStatus(name, room, date, amount, "Approved");
+
+        const rejectBtn = document.createElement("button");
+        rejectBtn.className = "reject";
+        rejectBtn.textContent = "Reject";
+        rejectBtn.onclick = () => updateStatus(name, room, date, amount, "Rejected");
+
+        card.appendChild(approveBtn);
+        card.appendChild(rejectBtn);
+      }
+
+      container.appendChild(card);
+    });
+  } catch (error) {
+    console.error('Error loading instalments:', error);
+    alert('An error occurred while loading instalments. Please check the console for details.');
+  }
 }
 
 function updateStatus(name, roomNumber, instalmentDate, instalmentAmount, newStatus) {
