@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Staff Welfare Manager</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f4f4f4;
+      color: #333;
+    }
+    header {
+      background: #6200ea;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #ccc;
+    }
+    .tab-button {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      font-weight: bold;
+      color: #6200ea;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-button.active {
+      border-bottom: 3px solid #6200ea;
+      background: #f0f0f0;
+    }
+    .tab-content {
+      display: none;
+      padding: 1rem;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .card {
+      background: white;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background-color: #6200ea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.approve {
+      background-color: green;
+      margin-right: 0.5rem;
+    }
+    button.reject {
+      background-color: red;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+<header>Staff Welfare Manager</header>
+
+<div class="tabs">
+  <div class="tab-button active" onclick="switchTab('password')">Set Password</div>
+  <div class="tab-button" onclick="switchTab('pending')">Pending Instalments</div>
+  <div class="tab-button" onclick="switchTab('approved')">Approved</div>
+  <div class="tab-button" onclick="switchTab('rejected')">Rejected</div>
+</div>
+
+<div id="tab-password" class="tab-content active">
+  <div class="card">
+    <label>Password:</label>
+    <input type="password" id="passwordInput" />
+    <button onclick="savePassword()">Save</button>
+  </div>
+</div>
+
+<div id="tab-pending" class="tab-content"></div>
+<div id="tab-approved" class="tab-content"></div>
+<div id="tab-rejected" class="tab-content"></div>
+
+<script>
+const PASSWORD = "staffpass123";
+const SHEET_ID = "1KCgj6xJNj7gpJEwKH8fj3I_SldZsg1mKHiOA_8VESC0"; // Replace with your Google Sheet ID
+const SHEET_NAME = "Installments";
+const API_KEY = "AIzaSyCzg84aqc_4Phwc142-HqDGYMv9Dy2Ctqo"; // Replace with your Google Sheets API key
+const scriptURL = 'https://script.google.com/macros/s/AKfycbxmJMzsXmw4HukOPgWArhBLZ6Y9KXAeqfKpbu9YDEHF9wdpSkeUjeNlUupH1-4cBzlK/exec';
+
+function switchTab(tab) {
+  if (tab !== 'password' && localStorage.getItem('managerPass') !== PASSWORD) {
+    alert("Access denied: Incorrect or missing password.");
+    return;
+  }
+  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.tab-button[onclick*="${tab}"]`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+
+  if (tab === 'pending') loadInstalments('Pending', true);
+  if (tab === 'approved') loadInstalments('Approved', false);
+  if (tab === 'rejected') loadInstalments('Rejected', false);
+}
+
+function savePassword() {
+  const input = document.getElementById("passwordInput").value;
+  if (input === PASSWORD) {
+    localStorage.setItem("managerPass", input);
+    alert("Access granted.");
+  } else {
+    alert("Incorrect password.");
+  }
+}
+
+async function fetchSheetData() {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+  const res = await fetch(url);
+  const json = await res.json();
+  return json.values;
+}
+
+async function loadInstalments(status, allowAction) {
+  const data = await fetchSheetData();
+  const headers = data[0];
+  const rows = data.slice(1);
+  const container = document.getElementById(`tab-${status.toLowerCase()}`);
+  container.innerHTML = "";
+
+  const filtered = rows.filter(row => row[4] === status);
+  if (filtered.length === 0) {
+    container.innerHTML = "<div class='card'>No data found.</div>";
+    return;
+  }
+
+  filtered.forEach((row, index) => {
+    const [email, name, room, date, , amount] = row;
+    const card = document.createElement('div');
+    card.className = "card";
+    card.innerHTML = `
+      <strong>${name}</strong><br/>
+      Room: ${room}<br/>
+      Date: ${date}<br/>
+      Amount: ₹${amount}<br/>
+    `;
+
+    if (allowAction) {
+      const approveBtn = document.createElement("button");
+      approveBtn.className = "approve";
+      approveBtn.textContent = "Approve";
+      approveBtn.onclick = () => updateStatus(name, room, date, amount, "Approved");
+
+      const rejectBtn = document.createElement("button");
+      rejectBtn.className = "reject";
+      rejectBtn.textContent = "Reject";
+      rejectBtn.onclick = () => updateStatus(name, room, date, amount, "Rejected");
+
+      card.appendChild(approveBtn);
+      card.appendChild(rejectBtn);
+    }
+
+    container.appendChild(card);
+  });
+}
+
+function updateStatus(name, roomNumber, instalmentDate, instalmentAmount, newStatus) {
+  const params = new URLSearchParams({
+    name,
+    roomNumber,
+    instalmentDate,
+    instalmentAmount,
+    newStatus
+  });
+
+  fetch(`${scriptURL}?${params.toString()}`, { method: 'GET' })
+    .then(response => {
+      alert(`Status updated to ${newStatus}`);
+      location.reload();
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Update failed.');
+    });
+}
+</script>
+
+</body>
+</html>
