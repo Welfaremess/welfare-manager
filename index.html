@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Staff Welfare Manager</title>
@@ -14,15 +16,79 @@
       flex-direction: column;
       height: 100vh;
     }
-    header {
-      background: #6200ea;
+  header {
+    background: #6200ea;
+    color: white;
+    padding: 1.2rem;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    position: relative; /* Ensures the refresh button is positioned correctly */
+  }
+#statusModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+#statusModal div {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  text-align: center;
+}
+
+#statusModal button {
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#statusModal button:hover {
+  background-color: #3700b3;
+}
+
+    .refresh-btn {
+      position: absolute;
+      right: 0rem;
+      top: 50%;
+      transform: translateY(-50%);
       color: white;
-      padding: 1.2rem;
-      text-align: center;
-      font-size: 1.6rem;
-      font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
+      background: none;
+      border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;  /* Center the icon vertically */
+    justify-content: center;  /* Center the icon horizontally */
+  }
+.search-bar {
+  width: 90%;
+  padding: 10px;
+  margin: 0 auto 12px auto; /* Top: 0, Bottom: 12px, Left/Right: auto */
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  display: block;
+}
+
+  .refresh-btn i {
+    font-size: 1.25rem;  /* Adjust the icon size as necessary */
+  }
+
     .tabs {
       display: flex;
       background: #fff;
@@ -33,6 +99,7 @@
       box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
       z-index: 100;
     }
+
     .tab-button {
       flex: 1;
       padding: 1rem;
@@ -59,10 +126,12 @@
       overflow-y: auto;
       background: #fff;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 5rem;
     }
     .tab-content.active {
       display: block;
     }
+
     .card {
       background: white;
       padding: 1.5rem;
@@ -75,7 +144,7 @@
       transform: scale(1.02);
     }
     input[type="password"] {
-      width: 100%;
+      width: 90%;
       padding: 0.8rem;
       border-radius: 6px;
       border: 1px solid #ccc;
@@ -95,10 +164,18 @@
       background-color: #3700b3;
     }
     button.approve {
+      width: 45%;
       background-color: green;
+      margin-right:10px;
     }
     button.reject {
+      width: 45%;
       background-color: red;
+    }
+    .button-container {
+      display: flex; /* Align buttons horizontally */
+      gap: 10px; /* Adds space between the buttons */
+      margin-top: 15px; /* Adds a little space above the buttons */
     }
     .tab-button:focus, button:focus {
       outline: none;
@@ -120,26 +197,66 @@
         padding: 1rem;
       }
     }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
   </style>
 </head>
 <body>
+<div id="overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 9998;"></div>
+<div id="loadingSpinner" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+  <div style="border: 4px solid #f3f3f3; border-top: 4px solid #6200ea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
+</div>
 
-<header>Staff Welfare Manager</header>
+<style>
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
 
+<header>
+  Staff Welfare Manager
+  <button class="refresh-btn" onclick="location.reload()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+</header>
 <div class="tabs">
-  <div class="tab-button active" onclick="switchTab('password')">Set Password</div>
-  <div class="tab-button" onclick="switchTab('pending')">Pending Instalments</div>
-  <div class="tab-button" onclick="switchTab('approved')">Approved</div>
-  <div class="tab-button" onclick="switchTab('rejected')">Rejected</div>
+  <div class="tab-button active" onclick="switchTab('password')"><i class="fas fa-lock" style="font-size: 25px;"></i><br/>Password</div>
+  <div class="tab-button" onclick="switchTab('pending')"><i class="fas fa-spinner fa-spin" style="font-size: 25px;"></i><br/>Pending</div>
+  <div class="tab-button" onclick="switchTab('approved')"><i class="fas fa-check-circle" style="font-size: 25px;"></i><br/>Approved</div>
+  <div class="tab-button" onclick="switchTab('rejected')"><i class="fas fa-times-circle" style="font-size: 25px;"></i><br/>
+Rejected</div>
 </div>
 
 <div id="tab-password" class="tab-content active">
   <div class="card">
     <label>Password:</label>
-    <input type="password" id="passwordInput" />
+    <br/><br/><input type="password" id="passwordInput" />
     <button onclick="savePassword()">Save</button>
   </div>
 </div>
+
+<!-- Image Modal -->
+
+<div id="imageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:9999;">
+  <!-- Close Button (modern) -->
+  <span id="closeModal" style="position:absolute; top:20px; right:20px; font-size:30px; font-weight:bold; color:Red; cursor:pointer; background-color:rgba(0,0,0,0.6); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; box-shadow:0 4px 8px rgba(0, 0, 0, 0.3); transition:background-color 0.3s ease, box-shadow 0.3s ease;">
+    &times;
+  </span>
+  <img id="modalImage" src="" style="max-width:90%; max-height:90%; border:4px solid white; border-radius:8px;" />
+</div>
+
+<!-- Modal HTML -->
+<div id="statusModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000;">
+  <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; text-align: center;">
+    <h3 id="statusModalTitle">Status Update</h3> <!-- Title -->
+    <p id="statusModalMessage">Your status update message goes here.</p> <!-- Message -->
+    <button id="closeModalButton">Close</button> <!-- Close Button -->
+  </div>
+</div>
+
+
 
 <div id="tab-pending" class="tab-content"></div>
 <div id="tab-approved" class="tab-content"></div>
@@ -154,13 +271,14 @@ const scriptURL = 'https://script.google.com/macros/s/AKfycbxmJMzsXmw4HukOPgWArh
 
 function switchTab(tab) {
   if (tab !== 'password' && localStorage.getItem('managerPass') !== PASSWORD) {
-    alert("Access denied: Incorrect or missing password.");
+      showStatusModal('Error', 'Access denied: Incorrect or missing password.');
     return;
   }
   document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelector(`.tab-button[onclick*="${tab}"]`).classList.add('active');
   document.getElementById(`tab-${tab}`).classList.add('active');
+
 
   if (tab === 'pending') loadInstalments('Pending', true);
   if (tab === 'approved') loadInstalments('Approved', false);
@@ -171,9 +289,9 @@ function savePassword() {
   const input = document.getElementById("passwordInput").value;
   if (input === PASSWORD) {
     localStorage.setItem("managerPass", input);
-    alert("Access granted.");
+      showStatusModal('Success', 'Access Granted.');
   } else {
-    alert("Incorrect password.");
+      showStatusModal('Error', 'Incorrect Password');
   }
 }
 
@@ -191,61 +309,107 @@ async function loadInstalments(status, allowAction) {
       throw new Error('No data found or sheet is empty.');
     }
 
-    const headers = data[0];  // First row is the header
-    const rows = data.slice(1);  // All subsequent rows are the data rows
-
-    if (!rows.length) {
-      document.getElementById(`tab-${status.toLowerCase()}`).innerHTML = "<div class='card'>No instalments available.</div>";
-      return;
-    }
-
-    // Filter rows by status (status is in the last column, index 7)
-    const filtered = rows.filter(row => row[7] === status); // row[7] is the 'Status' column
+    const headers = data[0];  
+    const rows = data.slice(1);  
 
     const container = document.getElementById(`tab-${status.toLowerCase()}`);
     container.innerHTML = ""; // Clear previous content
+
+    // Filter by status
+    const filtered = rows.filter(row => row[8] === status);
 
     if (filtered.length === 0) {
       container.innerHTML = "<div class='card'>No instalments with this status.</div>";
       return;
     }
 
-    filtered.forEach(row => {
-      const [email, name, room, date, amount] = row; // Adjusted the number of elements based on the columns
-      const card = document.createElement('div');
-      card.className = "card";
-      card.innerHTML = `
-        <strong>${name}</strong><br/>
-        Room: ${room}<br/>
-        Date: ${date}<br/>
-        Amount: ₹${amount}<br/>
-      `;
+    // Add search bar
+    const searchBar = document.createElement('input');
+    searchBar.type = 'text';
+    searchBar.placeholder = 'Search by name, email, or room...';
+    searchBar.className = 'search-bar';
+    container.appendChild(searchBar);
 
-      if (allowAction) {
-        const approveBtn = document.createElement("button");
-        approveBtn.className = "approve";
-        approveBtn.textContent = "Approve";
-        approveBtn.onclick = () => updateStatus(name, room, date, amount, "Approved");
+    const resultsContainer = document.createElement('div');
+    container.appendChild(resultsContainer);
 
-        const rejectBtn = document.createElement("button");
-        rejectBtn.className = "reject";
-        rejectBtn.textContent = "Reject";
-        rejectBtn.onclick = () => updateStatus(name, room, date, amount, "Rejected");
+    const renderCards = (filteredList) => {
+      resultsContainer.innerHTML = "";
 
-        card.appendChild(approveBtn);
-        card.appendChild(rejectBtn);
+      if (filteredList.length === 0) {
+        resultsContainer.innerHTML = "<div class='card'>No matching instalments found.</div>";
+        return;
       }
 
-      container.appendChild(card);
+      filteredList.forEach(row => {
+        const [primarykey, email, name, room, date, amount, mode, attachment] = row;
+        const card = document.createElement('div');
+        card.className = "card";
+
+        let attachmentContent = '';
+        if (mode.toLowerCase() !== 'cash' && attachment) {
+          attachmentContent = `
+            Attachment: <a href="javascript:void(0)" style="color:#6200ea; text-decoration:underline;" onclick="showImageModal('${attachment}')">View Image</a><br/>
+          `;
+        }
+
+        card.innerHTML = `
+          <strong>${name}</strong><br/>
+          Room: ${room}<br/>
+          Date: ${date}<br/>
+          Amount: ₹${amount}<br/>
+          Mode: ${mode}<br/>
+          ${attachmentContent}<br/>
+        `;
+
+        if (allowAction) {
+          const approveBtn = document.createElement("button");
+          approveBtn.className = "approve";
+          approveBtn.textContent = "Approve";
+          approveBtn.onclick = () => updateStatus(primarykey, name, room, date, amount, "Approved");
+
+          const rejectBtn = document.createElement("button");
+          rejectBtn.className = "reject";
+          rejectBtn.textContent = "Reject";
+          rejectBtn.onclick = () => updateStatus(primarykey, name, room, date, amount, "Rejected");
+
+          card.appendChild(approveBtn);
+          card.appendChild(rejectBtn);
+        }
+
+        resultsContainer.appendChild(card);
+      });
+    };
+
+    // Initial render
+    renderCards(filtered);
+
+    // Add search functionality
+    searchBar.addEventListener('input', () => {
+      const query = searchBar.value.toLowerCase();
+      const searched = filtered.filter(row => {
+        const [_, email, date, name, room, amount] = row;
+        return (
+          (email && email.toLowerCase().includes(query)) ||
+          (name && name.toLowerCase().includes(query)) ||
+          (room && room.toLowerCase().includes(query))
+        );
+      });
+      renderCards(searched);
     });
+
   } catch (error) {
     console.error('Error loading instalments:', error);
-    alert('An error occurred while loading instalments. Please check the console for details.');
+    showStatusModal('Error', 'An error occurred while loading instalments. Please check the console for details.');
   }
 }
 
-function updateStatus(name, roomNumber, instalmentDate, instalmentAmount, newStatus) {
+
+function updateStatus(primarykey, name, roomNumber, instalmentDate, instalmentAmount, newStatus) {
+  document.getElementById('overlay').style.display = 'block';
+  document.getElementById('loadingSpinner').style.display = 'block';
   const params = new URLSearchParams({
+    primarykey,
     name,
     roomNumber,
     instalmentDate,
@@ -255,14 +419,71 @@ function updateStatus(name, roomNumber, instalmentDate, instalmentAmount, newSta
 
   fetch(`${scriptURL}?${params.toString()}`, { method: 'GET' })
     .then(response => {
-      alert(`Status updated to ${newStatus}`);
-      location.reload();
+      document.getElementById('loadingSpinner').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+      showStatusModal('Success', `Status updated to ${newStatus}`);
+      
+      // Get the active tab
+      const activeTab = document.querySelector('.tab-button.active').textContent.trim().toLowerCase();
+
+      // Refetch the data for the active tab
+      if (activeTab === 'pending') {
+        loadInstalments('Pending', true);
+      } else if (activeTab === 'approved') {
+        loadInstalments('Approved', false);
+      } else if (activeTab === 'rejected') {
+        loadInstalments('Rejected', false);
+      }
     })
     .catch(error => {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('loadingSpinner').style.display = 'none';
+
       console.error('Error:', error);
-      alert('Update failed.');
+      showStatusModal('Error', 'Update failed. Please try again.');
     });
 }
+
+// Show modal with the image
+function showImageModal(src) {
+  const modal = document.getElementById('imageModal');
+  const img = document.getElementById('modalImage');
+  img.src = src;
+  modal.style.display = 'flex';
+}
+
+// Close modal when close button is clicked
+document.getElementById('closeModal').addEventListener('click', function(event) {
+  document.getElementById('imageModal').style.display = 'none';
+  event.stopPropagation(); // Prevent background click
+});
+
+// Close modal when background is clicked
+document.getElementById('imageModal').addEventListener('click', function(event) {
+  if (event.target === this) {
+    this.style.display = 'none';
+  }
+});
+function showStatusModal(title, message) {
+  // Get modal elements
+  const modal = document.getElementById('statusModal');
+  const titleElement = document.getElementById('statusModalTitle');
+  const messageElement = document.getElementById('statusModalMessage');
+  const closeButton = document.getElementById('closeModalButton');
+
+  // Set the title and message
+  titleElement.textContent = title;
+  messageElement.textContent = message;
+
+  // Show the modal
+  modal.style.display = 'flex';
+
+  // Close the modal when the close button is clicked
+  closeButton.onclick = function() {
+    modal.style.display = 'none'; // Hide the modal when the close button is clicked
+  }
+}
+
 </script>
 
 </body>
