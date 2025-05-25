@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Welfare Manager - CashBook Accounting</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f4f7fb;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+  header {
+    background: #6200ea;
+    color: white;
+    padding: 1.2rem;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    position: relative; /* Ensures the refresh button is positioned correctly */
+  }
+#statusModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+#statusModal div {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  text-align: center;
+}
+#tab-CB-form {
+  max-width: 480px;
+  margin: 20px auto 100px auto;
+  padding: 25px 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+#tab-CB-form h3 {
+  margin-bottom: 15px;
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: #2c3e50;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+#tab-CB-form label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  color: #34495e;
+}
+
+#tab-CB-form input[type="date"],
+#tab-CB-form input[type="number"] {
+  width: 45%;
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: 1.8px solid #bdc3c7;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+  color: #2c3e50;
+}
+
+#tab-CB-form input[type="date"]:focus,
+#tab-CB-form input[type="number"]:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+}
+
+#tab-CB-form form {
+  margin-top: 20px;
+}
+
+#tab-CB-form button {
+  width: 100%;
+  padding: 12px 0;
+  background-color: #2980b9;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 4px 12px rgba(41, 128, 185, 0.3);
+}
+
+#tab-CB-form button:hover {
+  background-color: #1c5980;
+  box-shadow: 0 6px 14px rgba(28, 89, 128, 0.5);
+}
+
+/* Responsive tweak */
+@media (max-width: 500px) {
+  #tab-CB-form {
+    padding: 20px;
+    width: 80%;
+  }
+  
+  #tab-CB-form label {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  #tab-CB-form input[type="date"],
+  #tab-CB-form input[type="number"] {
+    width: 90%;
+    margin-top: 6px;
+  }
+}
+
+#statusModal button {
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#statusModal button:hover {
+  background-color: #3700b3;
+}
+
+    .refresh-btn {
+      position: absolute;
+      right: 0rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: white;
+      background: none;
+      border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;  /* Center the icon vertically */
+    justify-content: center;  /* Center the icon horizontally */
+  }    
+     .nav-menu-options-btn {
+      position: absolute;
+      left: 0rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: white;
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;  /* Center the icon vertically */
+      justify-content: center;  /* Center the icon horizontally */
+     }
+    .nav-menu-wrapper {
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+    }
+.menu-dropdown {
+  display: none;
+  position: absolute;
+  left: 10px;
+  top: 45px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(200, 200, 200, 0.5);
+  min-width: 180px;
+  z-index: 1000;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.2s ease-out;
+  overflow: hidden;
+}
+
+.menu-dropdown a {
+  color: #333;
+  padding: 14px 18px;
+  text-decoration: none;
+  display: block;
+  font-size: 15px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.menu-dropdown a:hover {
+  background-color: #eaeaea;
+  color: #000;
+}
+
+.show {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+  .refresh-btn i {
+    font-size: 1.25rem;  /* Adjust the icon size as necessary */
+  }
+  .nav-menu-options-btn i {
+    font-size: 1.25rem;  /* Adjust the icon size as necessary */
+  }
+
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 0.5rem 0;
+      text-align: center;
+      cursor: pointer;
+      font-weight: bold;
+      color: #6200ea;
+      border-bottom: 2px solid transparent;
+      font-size: 1rem;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .tab-button:hover {
+      background: #e1bee7;
+      transform: scale(1.05);
+    }
+    .tab-button.active {
+      border-bottom: 3px solid #6200ea;
+      background: #f0f0f0;
+    }
+    .tab-content {
+      display: none;
+      padding: 1rem;
+      flex-grow: 0.2;
+      overflow-y: auto;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 5rem;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background: white;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    .card:hover {
+      transform: scale(1.02);
+    }
+    input[type="password"] {
+      width: 90%;
+      padding: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+    }
+    button {
+      padding: 0.7rem 1.2rem;
+      background-color: #6200ea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background-color: #3700b3;
+    }
+    button.approve {
+      width: 45%;
+      background-color: green;
+      margin-right:10px;
+    }
+/* Basic Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left; /* Left-align text in both headers and cells */
+  border: 1px solid #ddd;
+}
+
+/* Header Styling */
+th {
+  background-color: #007bff; /* Blue background for headers */
+  color: white; /* White text for the headers */
+  text-transform: uppercase;
+}
+
+/* Responsive Table (for small screens) */
+    button.reject {
+      width: 45%;
+      background-color: red;
+    }
+
+/* Table Container */
+#tab-CB-view {
+  max-width: 100%;
+  overflow-x: auto; /* Allow horizontal scrolling if needed */
+  padding: 20px;
+}
+
+/* Styling the Table */
+.styled-table {
+  width: 90%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Table Header Styling */
+.styled-table th {
+  background-color: #4CAF50; /* Fresh Green for header */
+  color: white;
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 16px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+/* Table Data Styling */
+.styled-table td {
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Hover Effect */
+.styled-table tr:hover {
+  background-color: #f1f1f1; /* Light grey background on hover */
+  transition: background-color 0.3s ease-in-out;
+}
+
+/* Odd row background color for better readability */
+.styled-table tr:nth-child(odd) {
+  background-color: #fafafa;
+}
+
+/* Total Row Styling */
+.styled-table tr:last-child {
+  font-weight: bold;
+  background-color: #e6f7e6; /* Light Green for total row */
+}
+
+/* Responsive Design for Small Screens */
+@media screen and (max-width: 600px) {
+  .styled-table {
+    font-size: 12px;
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: 8px;
+  }
+
+  .styled-table tr {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .styled-table td {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding-left: 40px;
+    position: relative;
+  }
+
+  .styled-table td:before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    font-weight: bold;
+    color: #007bff;
+  }
+}
+
+    .button-container {
+      display: flex; /* Align buttons horizontally */
+      gap: 10px; /* Adds space between the buttons */
+      margin-top: 15px; /* Adds a little space above the buttons */
+    }
+    .tab-button:focus, button:focus {
+      outline: none;
+    }
+    /* Make everything mobile-friendly */
+    @media screen and (max-width: 600px) {
+      .tabs {
+        font-size: 0.8rem;
+      }
+      .tab-button {
+        padding: 1rem;
+      }
+      header {
+        font-size: 1.2rem;
+        padding: 1rem;
+      }
+      .card {
+        margin: 0.5rem;
+        padding: 1rem;
+      }
+    }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+  </style>
+</head>
+<body>
+<div id="overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 10000;"></div>
+<div id="loadingSpinner" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+ background: rgba(255,255,255,0.8); padding: 20px; border-radius: 10px; text-align:center; z-index:1000;">
+  <div class="spinner" style="border: 6px solid #f3f3f3; border-top: 6px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+  <div>Saving data...</div>
+</div>
+
+
+<header>
+  Welfare Manager</br>CashBook Accounting
+  <button class="refresh-btn" onclick="location.reload()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+<div class="nav-menu-wrapper">
+  <button class="nav-menu-options-btn" onclick="toggleMenu()" title="Nav-menu-options"><i class="fas fa-bars"></i></button>
+  <div id="dropdownMenu" class="menu-dropdown">
+    <a href="index.html">Instalments Approval</a>
+    <a href="Manager_StaffAccounting.html">Staff Accounting</a>
+  </div>
+</div>
+</header>
+<div class="tabs">
+  <div class="tab-button active" onclick="switchTab('password')"><i class="fas fa-lock" style="font-size: 25px;"></i><br/>Password</div>
+  <div class="tab-button" onclick="switchTab('CB-form')"><i class="fas fa-file-alt" style="font-size: 25px;"></i><br/>Form</div>
+  <div class="tab-button" onclick="switchTab('CB-view')"><i class="fas fa-check-circle" style="font-size: 25px;"></i><br/>View</div>
+  <div class="tab-button" onclick="switchTab('CB-dashboard')"><i class="fas fa-table" style="font-size: 25px;"></i><br/>
+Dashboard</div>
+</div>
+
+<div id="tab-password" class="tab-content active">
+  <div class="card">
+    <label>Password:</label>
+    <br/><br/><input type="password" id="passwordInput" />
+    <button onclick="savePassword()">Save</button>
+  </div>
+</div>
+
+<!-- Image Modal -->
+
+<div id="imageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:9999;">
+  <!-- Close Button (modern) -->
+  <span id="closeModal" style="position:absolute; top:20px; right:20px; font-size:30px; font-weight:bold; color:Red; cursor:pointer; background-color:rgba(0,0,0,0.6); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; box-shadow:0 4px 8px rgba(0, 0, 0, 0.3); transition:background-color 0.3s ease, box-shadow 0.3s ease;">
+    &times;
+  </span>
+  <img id="modalImage" src="" style="max-width:90%; max-height:90%; border:4px solid white; border-radius:8px;" />
+</div>
+
+<!-- Modal HTML -->
+<div id="statusModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000;">
+  <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; text-align: center;">
+    <h3 id="statusModalTitle">Status Update</h3> <!-- Title -->
+    <p id="statusModalMessage">Your status update message goes here.</p> <!-- Message -->
+    <button id="closeModalButton">Close</button> <!-- Close Button -->
+  </div>
+</div>
+
+
+
+<div id="tab-CB-form" class="tab-content">
+  <h3>CashBook Accounting Form</h3>
+  <label for="CB-date">Select Date:</label>
+  <input type="date" id="CB-date" onchange="onDateSelected()">
+
+  <form id="CB-form" style="margin-top: 20px;">
+    <label>To Admission fee: <input type="number" id="To Admission fee"></label>
+    <label>To Deffered Expenses: <input type="number" id="To Deffered Expenses"></label>
+    <label>To Reserve: <input type="number" id="To Reserve"></label>
+    <label>By Online expense: <input type="number" id="By Online expense"></label>
+    <label>By Gas Expense: <input type="number" id="By Gas Expense"></label>
+    <label>By Chicken Expense: <input type="number" id="By Chicken Expense"></label>
+    <label>By Reserve: <input type="number" id="By Reserve"></label>
+    <label>By Advance Salary: <input type="number" id="By Advance Salary"></label>
+    <label>By Salary: <input type="number" id="By Salary"></label>
+    <label>By Meeting Expense: <input type="number" id="By Meeting Expense"></label>
+    <label>By Guesting - return money: <input type="number" id="By Guesting - return money"></label>
+    <label>By miscellaneous: <input type="number" id="By miscellaneous"></label>
+    <button type="button" onclick="saveCBData()">Save</button>
+  </form>
+</div>
+<div id="tab-CB-view" class="tab-content"></div>
+<div id="tab-CB-dashboard" class="tab-content"></div>
+
+<script>
+const PASSWORD = "staffpass123";
+const SHEET_ID = "1KCgj6xJNj7gpJEwKH8fj3I_SldZsg1mKHiOA_8VESC0"; // Replace with your Google Sheet ID
+const SHEET_NAME = "CB Data Entry";
+const API_KEY = "AIzaSyCzg84aqc_4Phwc142-HqDGYMv9Dy2Ctqo"; // Replace with your Google Sheets API key
+
+function toggleMenu() {
+  document.getElementById("dropdownMenu").classList.toggle("show");
+}
+
+// Optional: Close the menu if clicked outside
+window.onclick = function(event) {
+  if (!event.target.closest('.nav-menu-wrapper')) {
+    const dropdowns = document.getElementsByClassName("menu-dropdown");
+    for (let i = 0; i < dropdowns.length; i++) {
+      dropdowns[i].classList.remove('show');
+    }
+  }
+}
+
+
+function switchTab(tab) {
+  if (tab !== 'password' && localStorage.getItem('managerPass') !== PASSWORD) {
+      showStatusModal('Error', 'Access denied: Incorrect or missing password.');
+    return;
+  }
+  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.tab-button[onclick*="${tab}"]`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+
+
+  if (tab === 'CB-form') loadCBData();
+  if (tab === 'CB-view') ViewCBData();
+  if (tab === 'CB-dashboard') ViewCBDashboard();
+}
+
+function savePassword() {
+  const input = document.getElementById("passwordInput").value;
+  if (input === PASSWORD) {
+    localStorage.setItem("managerPass", input);
+      showStatusModal('Success', 'Access Granted.');
+  } else {
+      showStatusModal('Error', 'Incorrect Password');
+  }
+}
+
+async function fetchSheetData(sheetName = null, range = '') {
+  // If sheetName is not provided, use the global SHEET_NAME
+  sheetName = sheetName || window.SHEET_NAME;
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}${range ? `!${range}` : ''}?key=${API_KEY}`;
+  const res = await fetch(url);
+  const json = await res.json();
+  return json.values;
+}
+
+
+let dateToCBData = {}; // Will map YYYY-MM-DD to each day's data
+
+// STEP 1: Normalize the date string from the sheet (e.g., "Thursday, May 1, 2025" → "2025-05-01")
+function normalizeDate(dateStr) {
+  const parts = dateStr.match(/([A-Za-z]+),?\s+([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})/);
+  if (!parts) return null;
+
+  const [, , monthName, day, year] = parts;
+
+  const monthMap = {
+    January: "01", February: "02", March: "03", April: "04",
+    May: "05", June: "06", July: "07", August: "08",
+    September: "09", October: "10", November: "11", December: "12"
+  };
+
+  const month = monthMap[monthName];
+  if (!month) return null;
+
+  const paddedDay = day.padStart(2, '0');
+  return `${year}-${month}-${paddedDay}`;
+}
+
+
+// STEP 2: Transform sheet data (array of arrays) to array of objects
+function transformSheetToObjects(sheetRows) {
+  const headers = sheetRows[0]; // First row is column headers
+  return sheetRows.slice(1).map(row => {
+    const entry = {};
+    headers.forEach((key, index) => {
+      entry[key] = row[index] || ""; // Fill empty strings for missing data
+    });
+    return entry;
+  });
+}
+
+// STEP 3: Build a map from date → data object
+function buildDateMap(sheetObjects) {
+  const map = {};
+  sheetObjects.forEach(entry => {
+    const normalized = normalizeDate(entry["Date"]);
+    if (normalized) {
+      map[normalized] = entry;
+    }
+  });
+  return map;
+}
+
+// STEP 4: Load the sheet data into memory and structure it
+async function loadCBData() {
+  const rawSheetData = await fetchSheetData('CB data entry', 'A1:M32'); // You already have this
+  const structuredData = transformSheetToObjects(rawSheetData);
+  dateToCBData = buildDateMap(structuredData);
+  console.log("CB data by date:", dateToCBData);
+}
+
+// STEP 5: When a user selects a date from the input, populate the form
+function onDateSelected() {
+  const selectedDate = document.getElementById("CB-date").value;
+  const data = dateToCBData[selectedDate] || {};
+  const clean = val => (val || "").toString().replace(/,/g, "");
+
+
+  document.getElementById("To Admission fee").value = clean(data["To Admission fee"]) || "";
+  document.getElementById("To Deffered Expenses").value = clean(data["To Deffered Expenses"]) || "";
+  document.getElementById("To Reserve").value = clean(data["To Reserve"]) || "";
+  document.getElementById("By Online expense").value = clean(data["By Online expense"]) || "";
+  document.getElementById("By Gas Expense").value = clean(data["By Gas Expense"]) || "";
+  document.getElementById("By Chicken Expense").value = clean(data["By Chicken Expense"]) || "";
+  document.getElementById("By Reserve").value = clean(data["By Reserve"]) || "";
+  document.getElementById("By Advance Salary").value = clean(data["By Advance Salary"]) || "";
+  document.getElementById("By Salary").value = clean(data["By Salary"]) || "";
+  document.getElementById("By Meeting Expense").value = clean(data["By Meeting Expense"]) || "";
+  document.getElementById("By Guesting - return money").value = clean(data["By Guesting - return money"]) || "";
+  document.getElementById("By miscellaneous").value = clean(data["By miscellaneous"]) || "";
+
+}
+
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx7NGbZeGiagM-VrntVShm-iY14um3UdJK-pQsnX_NZLKkU2ksTW0JWk-C_BMk2ueh-tA/exec";
+
+function saveCBData() {
+  const selectedDate = document.getElementById("CB-date").value;
+  if (!selectedDate) {
+      showStatusModal('Error', 'Please select a date first.');
+    return;
+  }
+
+  document.getElementById('overlay').style.display = 'flex';
+  document.getElementById("loadingSpinner").style.display = "block";
+
+  const params = new URLSearchParams({
+    Date: new Date(selectedDate).toISOString().slice(0, 10), // "YYYY-MM-DD"
+    "To Admission fee": document.getElementById("To Admission fee").value,
+    "To Deffered Expenses": document.getElementById("To Deffered Expenses").value,
+    "To Reserve": document.getElementById("To Reserve").value,
+    "By Online expense": document.getElementById("By Online expense").value,
+    "By Gas Expense": document.getElementById("By Gas Expense").value,
+    "By Chicken Expense": document.getElementById("By Chicken Expense").value,
+    "By Reserve": document.getElementById("By Reserve").value,
+    "By Advance Salary": document.getElementById("By Advance Salary").value,
+    "By Salary": document.getElementById("By Salary").value,
+    "By Meeting Expense": document.getElementById("By Meeting Expense").value,
+    "By Guesting - return money": document.getElementById("By Guesting - return money").value,
+    "By miscellaneous": document.getElementById("By miscellaneous").value,
+
+    callback: "handleResponse"  // JSONP callback function name
+  });
+  
+  // Remove any existing script tag with this id
+  const oldScript = document.getElementById("jsonpScript");
+  if (oldScript) oldScript.remove();
+  
+  const script = document.createElement("script");
+  script.id = "jsonpScript";
+  script.src = WEB_APP_URL + "?" + params.toString();
+  document.body.appendChild(script);
+}
+
+function handleResponse(response) {
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById("loadingSpinner").style.display = "none";
+
+  if (response.status === "success") {
+      showStatusModal('Success', 'Data Saved Successfully.');
+  } else {
+          showStatusModal('Error', "Failed to save data: " + response.message);
+
+  }
+}
+
+  // Function to display staff data in the dashboard tab
+  async function ViewCBDashboard() {
+    const sheetData = await fetchSheetData('Cash Book', 'A3:F16');  // Fetch data from the specified range
+    
+    // Get the CB-dashboard tab content element
+    const dashboardTab = document.getElementById('tab-CB-dashboard');
+    dashboardTab.innerHTML = ''; // Clear the existing content in the tab
+
+    // If no data is returned or sheet is empty
+    if (!sheetData || sheetData.length === 0) {
+      dashboardTab.innerHTML = '<p>No data found in the specified range.</p>';
+      return;
+    }
+
+    // Create a table to display the data
+    const table = document.createElement('table');
+
+    // Create the table header (Item and Value)
+    const tableHeader = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    const headers = ['Item', 'Value'];  // We will display "Item" and "Value"
+    headers.forEach((headerText) => {
+      const th = document.createElement('th');
+      th.textContent = headerText;
+      tableHeader.appendChild(th);
+    });
+    table.appendChild(tableHeader);
+
+    // Create the table body with data from the sheet
+    const tableBody = document.createElement('tbody');
+
+    // Data structure: each row has a category and a corresponding value.
+    const dataPoints = [
+      { item: sheetData[0][0], value: sheetData[0][2] },
+      { item: sheetData[0][3], value: sheetData[0][5] },
+      { item: sheetData[1][0], value: sheetData[1][2] },
+      { item: sheetData[1][3], value: sheetData[1][5] },
+      { item: sheetData[2][0], value: sheetData[2][2] },
+      { item: sheetData[2][3], value: sheetData[2][5] },
+      { item: sheetData[3][0], value: sheetData[3][2] },
+      { item: sheetData[3][3], value: sheetData[3][5] },
+      { item: sheetData[4][0], value: sheetData[4][2] },
+      { item: sheetData[4][3], value: sheetData[4][5] },
+      { item: sheetData[5][0], value: sheetData[5][2] },
+      { item: sheetData[5][3], value: sheetData[5][5] },
+      { item: sheetData[6][0], value: sheetData[6][2] },
+      { item: sheetData[6][3], value: sheetData[6][5] },
+      { item: sheetData[7][0], value: sheetData[7][2] },
+      { item: sheetData[7][3], value: sheetData[7][5] },
+      { item: sheetData[8][0], value: sheetData[8][2] },
+      { item: sheetData[8][3], value: sheetData[8][5] },
+      { item: sheetData[9][3], value: sheetData[9][5] },
+      { item: sheetData[10][3], value: sheetData[10][5] },
+      { item: sheetData[11][3], value: sheetData[11][5] },
+      { item: sheetData[12][3], value: sheetData[12][5] },
+    ];
+
+    dataPoints.forEach((dataPoint) => {
+      const tr = document.createElement('tr');
+      
+      // Item Column
+      const tdItem = document.createElement('td');
+      tdItem.textContent = dataPoint.item;
+      tr.appendChild(tdItem);
+
+      // Value Column
+      const tdValue = document.createElement('td');
+      tdValue.textContent = dataPoint.value || '-'; // Display '-' if no value
+      tr.appendChild(tdValue);
+
+      tableBody.appendChild(tr);
+    });
+
+    // Append the table body to the table
+    table.appendChild(tableBody);
+    dashboardTab.appendChild(table);
+  }
+
+async function ViewCBData() {
+  const data = await fetchSheetData('Cash Book', 'H19:K421'); // adjust range as needed
+  const container = document.getElementById('tab-CB-view');
+  container.innerHTML = ''; // Clear existing content
+
+  if (!data || data.length === 0) {
+    container.innerHTML = '<p>No data found.</p>';
+    return;
+  }
+
+  let currentCard = null;
+  let cardContentMap = {};
+  let currentDate = null;
+
+  for (let row of data) {
+    const isDateHeader = row.filter(cell => cell !== undefined && cell !== '').length === 1 &&
+      /^\d{2}-\d{2}-\d{4}$/.test(row[0]);
+
+    if (isDateHeader) {
+      currentDate = row[0];
+      cardContentMap[currentDate] = [];
+    } else if (currentDate) {
+      cardContentMap[currentDate].push(row);
+    }
+  }
+
+  Object.entries(cardContentMap).forEach(([date, rows], index) => {
+    const card = document.createElement('div');
+    card.classList.add('cb-card');
+    card.style.border = '1px solid #ccc';
+    card.style.margin = '10px 0';
+    card.style.borderRadius = '6px';
+    card.style.overflow = 'hidden';
+
+    const header = document.createElement('div');
+    header.textContent = date;
+    header.style.padding = '10px';
+    header.style.background = '#f2f2f2';
+    header.style.cursor = 'pointer';
+    header.style.fontWeight = 'bold';
+
+    const body = document.createElement('div');
+    body.style.display = 'none';
+    body.style.padding = '10px';
+    body.style.background = '#fff';
+
+    // Build rows for the body
+    let bodyHtml = '<table style="width: 100%; border-collapse: collapse;">';
+    for (let row of rows) {
+      bodyHtml += '<tr>';
+      for (let i = 0; i < 4; i++) {
+        bodyHtml += `<td style="border: 1px solid #ccc; padding: 5px; word-wrap: break-word;">${row[i] ?? ''}</td>`;
+      }
+      bodyHtml += '</tr>';
+    }
+    bodyHtml += '</table>';
+    body.innerHTML = bodyHtml;
+
+    // Toggle behavior
+    header.addEventListener('click', () => {
+      if (currentCard && currentCard !== body) {
+        currentCard.style.display = 'none';
+      }
+
+      body.style.display = body.style.display === 'none' ? 'block' : 'none';
+      currentCard = body.style.display === 'block' ? body : null;
+    });
+
+    card.appendChild(header);
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+
+  console.log("Cards Built");
+}
+
+function showStatusModal(title, message) {
+  // Get modal elements
+  const modal = document.getElementById('statusModal');
+  const titleElement = document.getElementById('statusModalTitle');
+  const messageElement = document.getElementById('statusModalMessage');
+  const closeButton = document.getElementById('closeModalButton');
+
+  // Set the title and message
+  titleElement.textContent = title;
+  messageElement.textContent = message;
+
+  // Show the modal
+  modal.style.display = 'flex';
+
+  // Close the modal when the close button is clicked
+  closeButton.onclick = function() {
+    modal.style.display = 'none'; // Hide the modal when the close button is clicked
+  }
+}
+
+</script>
+
+</body>
+</html
