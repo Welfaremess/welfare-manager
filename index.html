@@ -74,7 +74,71 @@
     display: flex;
     align-items: center;  /* Center the icon vertically */
     justify-content: center;  /* Center the icon horizontally */
+  }    
+     .nav-menu-options-btn {
+      position: absolute;
+      left: 0rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: white;
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;  /* Center the icon vertically */
+      justify-content: center;  /* Center the icon horizontally */
+     }
+    .nav-menu-wrapper {
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+    }
+.menu-dropdown {
+  display: none;
+  position: absolute;
+  left: 10px;
+  top: 45px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(200, 200, 200, 0.5);
+  min-width: 180px;
+  z-index: 1000;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.2s ease-out;
+  overflow: hidden;
+}
+
+.menu-dropdown a {
+  color: #333;
+  padding: 14px 18px;
+  text-decoration: none;
+  display: block;
+  font-size: 15px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.menu-dropdown a:hover {
+  background-color: #eaeaea;
+  color: #000;
+}
+
+.show {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .search-bar {
   width: 90%;
   padding: 10px;
@@ -86,6 +150,9 @@
 }
 
   .refresh-btn i {
+    font-size: 1.25rem;  /* Adjust the icon size as necessary */
+  }
+  .nav-menu-options-btn i {
     font-size: 1.25rem;  /* Adjust the icon size as necessary */
   }
 
@@ -220,6 +287,13 @@
 <header>
   Staff Welfare Manager
   <button class="refresh-btn" onclick="location.reload()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+<div class="nav-menu-wrapper">
+  <button class="nav-menu-options-btn" onclick="toggleMenu()" title="Nav-menu-options"><i class="fas fa-bars"></i></button>
+  <div id="dropdownMenu" class="menu-dropdown">
+    <a href="#staff-accounting">Staff Accounting</a>
+    <a href="#cashbook-accounting">CashBook Accounting</a>
+  </div>
+</div>
 </header>
 <div class="tabs">
   <div class="tab-button active" onclick="switchTab('password')"><i class="fas fa-lock" style="font-size: 25px;"></i><br/>Password</div>
@@ -268,6 +342,21 @@ const SHEET_ID = "1KCgj6xJNj7gpJEwKH8fj3I_SldZsg1mKHiOA_8VESC0"; // Replace with
 const SHEET_NAME = "Instalments";
 const API_KEY = "AIzaSyCzg84aqc_4Phwc142-HqDGYMv9Dy2Ctqo"; // Replace with your Google Sheets API key
 const scriptURL = 'https://script.google.com/macros/s/AKfycbxmJMzsXmw4HukOPgWArhBLZ6Y9KXAeqfKpbu9YDEHF9wdpSkeUjeNlUupH1-4cBzlK/exec';
+
+function toggleMenu() {
+  document.getElementById("dropdownMenu").classList.toggle("show");
+}
+
+// Optional: Close the menu if clicked outside
+window.onclick = function(event) {
+  if (!event.target.closest('.nav-menu-wrapper')) {
+    const dropdowns = document.getElementsByClassName("menu-dropdown");
+    for (let i = 0; i < dropdowns.length; i++) {
+      dropdowns[i].classList.remove('show');
+    }
+  }
+}
+
 
 function switchTab(tab) {
   if (tab !== 'password' && localStorage.getItem('managerPass') !== PASSWORD) {
@@ -487,4 +576,4 @@ function showStatusModal(title, message) {
 </script>
 
 </body>
-</html
+</html>
