@@ -778,60 +778,78 @@ function handleResponse(response) {
 
 async function ViewStaffData() {
   const data = await fetchSheetData('staff', 'H11:K227'); // adjust range as needed
+  const container = document.getElementById('tab-staff-view');
+  container.innerHTML = ''; // Clear existing content
 
-  if (data && data.length > 0) {
-    let tableHtml = '<table border="1" cellspacing="0" cellpadding="5" style="border-collapse: collapse; width: 100%;">';
-
-    for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
-      const row = data[rowIndex];
-
-      const isDateHeader = row.filter(cell => cell !== undefined && cell !== '').length === 1 &&
-        /^\d{2}-\d{2}-\d{4}$/.test(row[0]); // Checks for DD-MM-YYYY format in first cell only
-
-      if (isDateHeader) {
-        tableHtml += `
-          <tr style="background-color: lightgray;">
-            <td colspan="4" style="text-align: center;">${row[0]}</td>
-          </tr>
-        `;
-        continue;
-      }
-
-      tableHtml += '<tr>';
-
-      // Left side
-      tableHtml += `<td>${row[0] ?? ''}</td>`;
-      tableHtml += `<td>${row[1] ?? ''}</td>`;
-
-      // Handle merged undefined in row 4 and 5 logic (if still required)
-      if (
-        (rowIndex < data.length - 1) &&
-        row[2] === undefined && row[3] === undefined &&
-        data[rowIndex + 1][2] === undefined && data[rowIndex + 1][3] === undefined
-      ) {
-        tableHtml += `<td colspan="2" rowspan="2"></td>`;
-      } else if (
-        rowIndex > 0 &&
-        data[rowIndex - 1][2] === undefined && data[rowIndex - 1][3] === undefined &&
-        row[2] === undefined && row[3] === undefined
-      ) {
-        // Skip this row (already merged with the one above)
-        tableHtml += '';
-      } else {
-        // Normal right side rendering
-        tableHtml += `<td>${row[2] ?? ''}</td>`;
-        tableHtml += `<td>${row[3] ?? ''}</td>`;
-      }
-
-      tableHtml += '</tr>';
-    }
-
-    tableHtml += '</table>';
-    document.getElementById('tab-staff-view').innerHTML = tableHtml;
-    console.log(tableHtml);
-  } else {
-    console.log('No data found or failed to fetch data');
+  if (!data || data.length === 0) {
+    container.innerHTML = '<p>No data found.</p>';
+    return;
   }
+
+  let currentCard = null;
+  let cardContentMap = {};
+  let currentDate = null;
+
+  for (let row of data) {
+    const isDateHeader = row.filter(cell => cell !== undefined && cell !== '').length === 1 &&
+      /^\d{2}-\d{2}-\d{4}$/.test(row[0]);
+
+    if (isDateHeader) {
+      currentDate = row[0];
+      cardContentMap[currentDate] = [];
+    } else if (currentDate) {
+      cardContentMap[currentDate].push(row);
+    }
+  }
+
+  Object.entries(cardContentMap).forEach(([date, rows], index) => {
+    const card = document.createElement('div');
+    card.classList.add('cb-card');
+    card.style.border = '1px solid #ccc';
+    card.style.margin = '10px 0';
+    card.style.borderRadius = '6px';
+    card.style.overflow = 'hidden';
+
+    const header = document.createElement('div');
+    header.textContent = date;
+    header.style.padding = '10px';
+    header.style.background = '#f2f2f2';
+    header.style.cursor = 'pointer';
+    header.style.fontWeight = 'bold';
+
+    const body = document.createElement('div');
+    body.style.display = 'none';
+    body.style.padding = '10px';
+    body.style.background = '#fff';
+
+    // Build rows for the body
+    let bodyHtml = '<table style="width: 100%; border-collapse: collapse;">';
+    for (let row of rows) {
+      bodyHtml += '<tr>';
+      for (let i = 0; i < 4; i++) {
+        bodyHtml += `<td style="border: 1px solid #ccc; padding: 5px; word-wrap: break-word;">${row[i] ?? ''}</td>`;
+      }
+      bodyHtml += '</tr>';
+    }
+    bodyHtml += '</table>';
+    body.innerHTML = bodyHtml;
+
+    // Toggle behavior
+    header.addEventListener('click', () => {
+      if (currentCard && currentCard !== body) {
+        currentCard.style.display = 'none';
+      }
+
+      body.style.display = body.style.display === 'none' ? 'block' : 'none';
+      currentCard = body.style.display === 'block' ? body : null;
+    });
+
+    card.appendChild(header);
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+
+  console.log("Cards Built");
 }
 
 
